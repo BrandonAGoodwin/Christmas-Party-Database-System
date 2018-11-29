@@ -1,0 +1,38 @@
+--Menu(mid, description, costprice) 
+
+CREATE TABLE Menu (
+	mid				INTEGER		NOT NULL UNIQUE,
+	description		CHAR(50),
+	costprice		INTEGER
+)
+
+--Venue(vid, name, venuecost)
+
+CREATE TABLE Venue (
+	vid				INTEGER		NOT NULL UNIQUE,
+	name			CHAR(15),
+	venuecost		INTEGER
+)
+
+--Entertainment(eid, description, costprice) 
+
+CREATE TABLE Entertainment (
+	eid				INTEGER		NOT NULL UNIQUE,
+	description		CHAR(50),
+	costprice		INTEGER
+)
+
+--Party (pid, name, mid, vid, eid, price, timing, numberofguests) 
+
+CREATE TABLE Party (
+	pid				INTEGER		NOT NULL UNIQUE,
+	name			CHAR(15),
+	mid				INTEGER,
+	vid				INTEGER,
+	eid				INTEGER,
+	price			INTEGER,
+	timing			INTEGER,
+	numberofguests	INTEGER
+)	
+
+https://stackoverflow.com/questions/18672643/how-to-print-a-table-of-information-in-java
