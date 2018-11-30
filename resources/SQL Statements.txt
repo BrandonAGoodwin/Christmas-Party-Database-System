@@ -1,26 +1,33 @@
 --Menu(mid, description, costprice) 
+-- costprice: Cost per person
 
 CREATE TABLE Menu (
 	mid				INTEGER		NOT NULL UNIQUE,
 	description		CHAR(50),
-	costprice		INTEGER
-)
+	costprice		INTEGER,
+	PRIMARY KEY (mid),
+	CHECK (costprice >= 0)
+);
 
 --Venue(vid, name, venuecost)
 
 CREATE TABLE Venue (
 	vid				INTEGER		NOT NULL UNIQUE,
 	name			CHAR(15),
-	venuecost		INTEGER
-)
+	venuecost		INTEGER,
+	PRIMARY KEY (vid),
+	CHECK (venuecost >= 0)
+);
 
 --Entertainment(eid, description, costprice) 
 
 CREATE TABLE Entertainment (
 	eid				INTEGER		NOT NULL UNIQUE,
 	description		CHAR(50),
-	costprice		INTEGER
-)
+	costprice		INTEGER,
+	PRIMARY KEY (eid),
+	CHECK (costprice >= 0)
+);
 
 --Party (pid, name, mid, vid, eid, price, timing, numberofguests) 
 
@@ -31,8 +38,28 @@ CREATE TABLE Party (
 	vid				INTEGER,
 	eid				INTEGER,
 	price			INTEGER,
-	timing			INTEGER,
-	numberofguests	INTEGER
-)	
+	timing			TIMESTAMP,
+	numberofguests	INTEGER,
+	PRIMARY KEY (pid),
+	FOREIGN KEY (mid) REFERENCES Menu,
+	FOREIGN KEY (vid) REFERENCES Venue,
+	FOREIGN KEY (eid) REFERENCES Entertainment,
+	CHECK (price >= 0),
+	CHECK (numberofguests >= 1)
+);
 
+SELECT
+	Party.pid,
+	Party.name,
+	Venue.name,
+	Menu.description,
+	Entertainment.description,
+	Party.numberofguests,
+	Party.price,
+	Venue.venuecost+Entertainment.costprice+Menu.costprice*Party.numberofguests
+FROM Party
+INNER JOIN Venue ON Party.vid = Venue.vid
+INNER JOIN Menu ON Party.mid = Menu.mid
+INNER JOIN Entertainment ON Party.eid = Entertainment.eid
+WHERE Party.pid = 1
 https://stackoverflow.com/questions/18672643/how-to-print-a-table-of-information-in-java
