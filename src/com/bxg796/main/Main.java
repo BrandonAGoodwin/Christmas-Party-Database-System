@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.text.SimpleDateFormat;
@@ -24,13 +25,10 @@ public class Main {
 		clientUI = new UI("Database Manager", holder);
 		db = null;
 		try {
-			Random randGenerator = new Random();
-			Date date = new Date(System.currentTimeMillis() + (Math.abs(randGenerator.nextLong()) % (1L * 365 * 24 * 60 * 60 * 1000)));
-			
-			
 			print("Trying to connect...");
 			db = DriverManager.getConnection(DatabaseInfo.URL, DatabaseInfo.USERNAME, DatabaseInfo.PASSWORD);
 			print("Connected.");
+			
 			
 			
 			
@@ -49,9 +47,27 @@ public class Main {
 
 	}
 	
-	private String partyReport(Integer pid) {
+	private String partyReport(Integer pid) throws SQLException {
 		String report = "";
+		//@formatter:off
+		PreparedStatement ps = db.prepareStatement(
+				"SELECT\n" + 
+				"	Party.pid,\n" + 
+				"	Party.name,\n" + 
+				"	Venue.name,\n" + 
+				"	Menu.description,\n" + 
+				"	Entertainment.description,\n" + 
+				"	Party.numberofguests,\n" + 
+				"	Party.price,\n" + 
+				"	Venue.venuecost+Entertainment.costprice+Menu.costprice*Party.numberofguests\n" + 
+				"FROM Party\n" + 
+				"INNER JOIN Venue ON Party.vid = Venue.vid\n" + 
+				"INNER JOIN Menu ON Party.mid = Menu.mid\n" + 
+				"INNER JOIN Entertainment ON Party.eid = Entertainment.eid\n" + 
+				"WHERE Party.pid = 999;");
+		//@formatter:on
 		
+		CreateDatabase.printResultSet(ps.executeQuery());
 		return report;
 	}
 	

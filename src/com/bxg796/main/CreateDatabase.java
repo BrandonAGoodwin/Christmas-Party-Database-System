@@ -47,10 +47,10 @@ public class CreateDatabase {
 			
 			//////////////////////////////////////////
 			
+			deleteTable(db, "Party");
 			deleteTable(db, "Venue"); 
 			deleteTable(db, "Menu");
 			deleteTable(db, "Entertainment");
-			deleteTable(db, "Party");
 			
 			///////////////////////////////////////////
 			
@@ -271,7 +271,7 @@ public class CreateDatabase {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void printResultSet(ResultSet rs) throws SQLException {
+	public static void printResultSet(ResultSet rs) throws SQLException {
 		
 		ResultSetMetaData rsmd = rs.getMetaData();
 		int colNo = rsmd.getColumnCount();

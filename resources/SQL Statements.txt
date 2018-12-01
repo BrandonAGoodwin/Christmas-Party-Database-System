@@ -48,6 +48,8 @@ CREATE TABLE Party (
 	CHECK (numberofguests >= 1)
 );
 
+INSERT INTO 
+
 SELECT
 	Party.pid,
 	Party.name,
@@ -61,5 +63,5 @@ FROM Party
 INNER JOIN Venue ON Party.vid = Venue.vid
 INNER JOIN Menu ON Party.mid = Menu.mid
 INNER JOIN Entertainment ON Party.eid = Entertainment.eid
-WHERE Party.pid = 1
+WHERE Party.pid = 999
 https://stackoverflow.com/questions/18672643/how-to-print-a-table-of-information-in-java
