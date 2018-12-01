@@ -30,9 +30,18 @@ public class Main {
 			print("Connected.");
 			
 			
-			
+			String report = partyReport(Integer.parseInt(clientUI.readLine()));
 			
 		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		while(true) {
@@ -44,6 +53,8 @@ public class Main {
 				e.printStackTrace();
 			}
 		}
+		
+		
 
 	}
 	
@@ -64,7 +75,7 @@ public class Main {
 				"INNER JOIN Venue ON Party.vid = Venue.vid\n" + 
 				"INNER JOIN Menu ON Party.mid = Menu.mid\n" + 
 				"INNER JOIN Entertainment ON Party.eid = Entertainment.eid\n" + 
-				"WHERE Party.pid = 999;");
+				"WHERE Party.pid = " + pid + ";");
 		//@formatter:on
 		
 		CreateDatabase.printResultSet(ps.executeQuery());
