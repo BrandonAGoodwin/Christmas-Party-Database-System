@@ -67,16 +67,17 @@ WHERE Party.pid = userinput;
 
 -- Menu Report
 
-SELECT
-	Menu.mid,
-	Menu.description,
-	Menu.costprice,
-	COUNT(Menu.mid),
-	SUM(Party.numberofguests)
-FROM Menu
-LEFT JOIN Party ON Party.mid = Menu.mid
-WHERE Menu.mid = 102
-GROUP BY Menu.mid, Menu.description, Menu.costprice;
+SELECT * FROM
+	(SELECT
+		Menu.mid,
+		Menu.description,
+		Menu.costprice,
+		COUNT(Menu.mid),
+		SUM(Party.numberofguests)
+	FROM Menu
+	LEFT JOIN Party ON Party.mid = Menu.mid
+	GROUP BY Menu.mid, Menu.description, Menu.costprice) AS res
+WHERE res.mid = userinput;
 
 
 https://stackoverflow.com/questions/18672643/how-to-print-a-table-of-information-in-java

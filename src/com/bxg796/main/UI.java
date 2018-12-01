@@ -15,11 +15,12 @@ import javax.swing.JTextField;
 
 import java.awt.BorderLayout;
 import javax.swing.JScrollPane;
+
 public class UI extends JFrame {
 
+	private static final long serialVersionUID = -8874457793322187251L;
+
 	public static final String TOGGLE_COMMAND = "togglegui";
-	
-	private static final long serialVersionUID = 8075642296734150448L;
 
 	private JPanel textPanel;
 
@@ -86,7 +87,7 @@ public class UI extends JFrame {
 			}
 		});
 
-		inputPanel.add(textField/* , BorderLayout.SOUTH */);
+		inputPanel.add(textField);
 
 		add(inputPanel, BorderLayout.SOUTH);
 
@@ -94,12 +95,6 @@ public class UI extends JFrame {
 
 	}
 
-	/**
-	 * Print a message to the text area and moving to the next line.
-	 * 
-	 * @param message
-	 *            The message to be printed to the text area.
-	 */
 	public void tell(String message) {
 		System.out.println(message);
 		textArea.append(message);
@@ -132,10 +127,6 @@ public class UI extends JFrame {
 		}
 	}
 
-	/**
-	 * Toggle the guiMode variable and set the visibility of the UI to equal
-	 * the guiMode.
-	 */
 	private void toggleGUIMode() {
 		if (guiMode == true) {
 			guiMode = false;

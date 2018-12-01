@@ -12,12 +12,7 @@ import java.util.Random;
 import org.postgresql.util.PSQLException;
 
 public class CreateDatabase {
-	
-	private final ArrayList<String> tables;
-	private final String URL = "jdbc:postgresql://mod-intro-databases.cs.bham.ac.uk/bxg796";
-	private final String USERNAME = "bxg796";
-	private final String PASSWORD =                                                                             		 								"CartersJr10";
-	
+                                                                      		 								
 	private final Integer INITIAL_NO_OF_PARTIES = 1000;
 	private final Integer INITIAL_NO_OF_ENTRIES = 100;
 	
@@ -29,33 +24,28 @@ public class CreateDatabase {
 	Connection db;
 	
 	public static void main(String[] args) {
+		@SuppressWarnings("unused")
 		CreateDatabase createDB = new CreateDatabase();
 	}
 	
-	public CreateDatabase() {
-		tables = new ArrayList<String>();
-		initDatabase();
-	}
+	public CreateDatabase() { initDatabase(); }
 	
 	private void initDatabase() {
 		verbose = false;
 		db = null;
 		try {
-			//String username = System.console().readLine();
-			//String password = new String(System.console().readPassword());
-
 			print("Trying to connect... ");
-			db = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+			db = DriverManager.getConnection(DatabaseInfo.URL, DatabaseInfo.USERNAME, DatabaseInfo.PASSWORD);
 			print("Connected to server.");
 			
-			//////////////////////////////////////////
+			// Delete all pre-existing party, venue, menu and entertainment tables
 			
 			deleteTable(db, "Party");
 			deleteTable(db, "Venue"); 
 			deleteTable(db, "Menu");
 			deleteTable(db, "Entertainment");
 			
-			// Create and populate each table, then
+			// Create and populate each table
 			
 			createNewVenueTable(INITIAL_NO_OF_ENTRIES);
 			if(verbose) System.out.println(getResultSetString(db.prepareStatement(
@@ -89,27 +79,26 @@ public class CreateDatabase {
 			
 			addUniqueEntries();
 	
-		} catch(SQLException e) {
-			e.printStackTrace();
-		} 
+		} catch(SQLException e) { e.printStackTrace(); } 
 		
+		// Check if the connection is closed, if not close it
 		 try {
          	if(!db.isClosed()) {
          		print("Closing connection.");
          		db.close(); 
          	}
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
 	}
 	
+	// Creating and populating tables
 	private void createNewVenueTable(int noOfEntries) throws SQLException {
 		String makeVenueTableString = 
 				"CREATE TABLE Venue (\r\n" + 
 				"	vid				INTEGER		NOT NULL UNIQUE,\r\n" + 
 				"	name			VARCHAR(30),\r\n" + 
 				"	venuecost		INTEGER,\r\n" +  
-				"	PRIMARY KEY (vid),\r\n" + 
+				"	PRIMARY KEY (vid),\r\n" +
+				"   CHECK (vid>=0),\r\n" +
 				"	CHECK (venuecost>=0)\r\n" + 
 				");";
 		
@@ -120,7 +109,6 @@ public class CreateDatabase {
 		
 		print("Populating Venue... ");
 		String venueTableName = "Venue";
-		tables.add(venueTableName);
 		
 		HashMap<String, DatabaseInfo.Type> venueAttributes = new HashMap<String, DatabaseInfo.Type>();
 		venueAttributes.put("vid", DatabaseInfo.Type.INTEGER);
@@ -139,7 +127,8 @@ public class CreateDatabase {
 				"	mid				INTEGER		NOT NULL UNIQUE,\r\n" + 
 				"	description		VARCHAR(50),\r\n" + 
 				"	costprice		INTEGER,\r\n" + 
-				"	PRIMARY KEY (mid),\r\n" + 
+				"	PRIMARY KEY (mid),\r\n" +
+				"   CHECK (mid>=0),\r\n" +
 				"	CHECK (costprice>=0)\r\n" + 
 				");";
 		
@@ -149,8 +138,7 @@ public class CreateDatabase {
 		
 		print("Populating Menu... ");
 		String menuTableName = "Menu";
-		tables.add(menuTableName);
-		
+	
 		HashMap<String, DatabaseInfo.Type> menuAttributes = new HashMap<String, DatabaseInfo.Type>();
 		menuAttributes.put("mid", DatabaseInfo.Type.INTEGER);
 		menuAttributes.put("description", DatabaseInfo.Type.STRING);
@@ -167,7 +155,8 @@ public class CreateDatabase {
 				"	eid				INTEGER		NOT NULL UNIQUE,\r\n" + 
 				"	description		VARCHAR(50),\r\n" + 
 				"	costprice		INTEGER,\r\n" + 
-				"	PRIMARY KEY (eid),\r\n" + 
+				"	PRIMARY KEY (eid),\r\n" +
+				"   CHECK (eid >= 0),\r\n" +
 				"	CHECK (costprice>=0)\r\n" + 
 				");";
 		
@@ -177,8 +166,7 @@ public class CreateDatabase {
 		
 		print("Populating Entertainment... ");
 		String entertainmentTableName = "Entertainment";
-		tables.add(entertainmentTableName);
-		
+	
 		HashMap<String, DatabaseInfo.Type> entertainmentAttributes = new HashMap<String, DatabaseInfo.Type>();
 		entertainmentAttributes.put("eid", DatabaseInfo.Type.INTEGER);
 		entertainmentAttributes.put("description", DatabaseInfo.Type.STRING);
@@ -204,6 +192,7 @@ public class CreateDatabase {
 				"	FOREIGN KEY (mid) REFERENCES Menu,\r\n" + 
 				"	FOREIGN KEY (vid) REFERENCES Venue,\r\n" + 
 				"	FOREIGN KEY (eid) REFERENCES Entertainment,\r\n" + 
+				"   CHECK (pid >= 0),\r\n" +
 				"	CHECK (price >= 0),\r\n" + 
 				"	CHECK (numberofguests >= 1)\r\n" + 
 				");";
@@ -213,18 +202,18 @@ public class CreateDatabase {
 		makePartyTable.execute();
 		
 		print("Populating Party... ");
-		String partyTableName = "Party";
-		tables.add(partyTableName);
-		
+
 		String attributeString = "INSERT INTO Party (pid,name,mid,vid,eid,price,timing,numberofguests) VALUES (";
 		String popString = "";
 		Random randGenerator = new Random();
-		for(int i = 0; i < INITIAL_NO_OF_PARTIES; i++) {
-			Integer mid = randGenerator.nextInt(INITIAL_NO_OF_ENTRIES);
-			Integer vid = randGenerator.nextInt(INITIAL_NO_OF_ENTRIES);
-			Integer eid = randGenerator.nextInt(INITIAL_NO_OF_ENTRIES);
+		for(int i = 1; i <= INITIAL_NO_OF_PARTIES; i++) {
+			// Generate a random mid, vid, eid and numberofguests to use
+			Integer mid = randGenerator.nextInt(INITIAL_NO_OF_ENTRIES) + 1;
+			Integer vid = randGenerator.nextInt(INITIAL_NO_OF_ENTRIES) + 1;
+			Integer eid = randGenerator.nextInt(INITIAL_NO_OF_ENTRIES) + 1;
 			Integer numberofguests = randGenerator.nextInt(300) + 1;
 			
+			// Calculating the total cost of the party so a quoted price can be generated that is less that the net price
 			ResultSet menuResult = db.prepareStatement("SELECT costprice FROM Menu WHERE mid = " + mid).executeQuery();
 			menuResult.next();
 			Integer menuCost = menuResult.getInt("costprice");
@@ -235,16 +224,17 @@ public class CreateDatabase {
 			entertainmentResult.next();
 			Integer entertainmentCost = entertainmentResult.getInt("costprice");
 			Integer price = randGenerator.nextInt((menuCost * numberofguests) + venueCost + entertainmentCost) + 1; 
+			// Generating a random valid time and date within the next year
 			Date date = new Date(System.currentTimeMillis() + (Math.abs(randGenerator.nextLong()) % (1L * 365 * 24 * 60 * 60 * 1000)));
 			Time time = new Time(randGenerator.nextLong() % (1000 * 60 * 60));
 			popString += attributeString + i + ",'name" + i + "'," + mid + "," + vid + "," + eid + "," + price + ",'" + date.toString() + " " + time.toString() + "'," + numberofguests + ");\n";
 		}
-		System.out.println(popString);
 
 		PreparedStatement popPartyTable = db.prepareStatement(popString);
 		popPartyTable.execute();
 	}
 	
+	// Populates a table given the table name and a hash map of attributes and their data type
 	private String populateTable(String tableName, HashMap<String, DatabaseInfo.Type> attributes, int noOfRecords) {
 		String popString = "";
 		String attributeString = tableName + " (";
@@ -253,7 +243,7 @@ public class CreateDatabase {
 		
 		attributeString = attributeString.substring(0, attributeString.length() - 1) + ")"; 
 		
-		for(int i = 0; i < noOfRecords; i++) {
+		for(int i = 1; i <= noOfRecords; i++) {
 			popString += "INSERT INTO " + attributeString + " VALUES (";
 			for (String attribute : attributes.keySet()) {
 				DatabaseInfo.Type type = attributes.get(attribute);
@@ -267,8 +257,11 @@ public class CreateDatabase {
 		return popString;
 	}
 	
+	// Adding entries to tables
+	
+	// Adds a number of unique entries to the database
 	private void addUniqueEntries() throws SQLException {
-		addToVenueTable(100, "Subs House", 3500);
+		addToVenueTable(110, "Subs House", 3500);
 		addToVenueTable(101, "CS Atrium", 0);
 		addToVenueTable(102, "Party Hall", 10000);
 		addToVenueTable(103, "Slomans Lounge", 24000);
@@ -279,18 +272,18 @@ public class CreateDatabase {
 		addToVenueTable(108, "Warehouse", 57000);
 		addToVenueTable(109, "Howls Moving Castle", 9999900);
 		
-		addToMenuTable(100, "Dixys Chicken", 450);
+		addToMenuTable(110, "Dixys Chicken", 450);
 		addToMenuTable(101, "Roosters", 420);
 		addToMenuTable(102, "Big Johns", 390);
-		addToMenuTable(103, "Liberty Hot Pot", 100);
+		addToMenuTable(103, "Liberty Hot Pot", 110);
 		addToMenuTable(104, "Fish and Chips", 190);
 		addToMenuTable(105, "Ramen and Beans", 0);
 		addToMenuTable(106, "Cold Finger Foods", 50);
-		addToMenuTable(107, "One Pound Fish", 100);
+		addToMenuTable(107, "One Pound Fish", 110);
 		addToMenuTable(108, "Sag aloo and Cake", 1350);
 		addToMenuTable(109, "Lots of Salad", 80);
 		
-		addToEntertainmentTable(100, "Crawl and Drinks", 2000);
+		addToEntertainmentTable(110, "Crawl and Drinks", 2000);
 		addToEntertainmentTable(101, "Secret Hitler", 3000);
 		addToEntertainmentTable(102, "Laser Tag", 15000);
 		addToEntertainmentTable(103, "Cinema", 12000);
@@ -301,13 +294,17 @@ public class CreateDatabase {
 		addToEntertainmentTable(108, "Synchronised Swimmers", 38900);
 		addToEntertainmentTable(109, "DJ", 13000);
 		
-		addToPartyTable(1000, "Subs Xmas Bash", 100, 100, 101, 5000, "2018-12-24 20:00:00", 13);
-		addToPartyTable(1001, "Student Night", 105, 104, 100, 2500, "2018-10-13 18:30:00", 24);
-		addToPartyTable(1002, "Switch at the Cinema", 101, 107, 100, 30000, "2019-01-10 12:45:00", 10);
+		addToPartyTable(1001, "Student Night", 105, 104, 110, 2500, "2018-10-13 18:30:00", 24);
+		addToPartyTable(1002, "Switch at the Cinema", 101, 107, 110, 30000, "2019-01-10 12:45:00", 10);
 		addToPartyTable(1003, "CS Ball", 106, 106, 109, 400000, "2018-12-09 19:30:00", 250);
 		addToPartyTable(1004, "Work Party", 109, 108, 102, 125000, "2019-04-11 07:30:00", 63);
 		addToPartyTable(1005, "Upper Echelon Function", 107, 105, 104, 10000000, "2019-01-01 22:00:00", 4);
-		addToPartyTable(1006, "Birthday Party", 100, 109, 108, 30000, "2018-07-14 21:15:00", 31);
+		addToPartyTable(1006, "Birthday Party", 110, 109, 108, 30000, "2018-07-14 21:15:00", 31);
+		addToPartyTable(1007, "Family Gathering", 104, 109, 107, 48500, "2019-03-28 14:30:00", 55);
+		addToPartyTable(1008, "Super Mario Party", 103, 110, 110, 4000, "2018-11-30 21:00:00", 8);
+		addToPartyTable(1009, "S Party 8", 105, 101, 106, 125500, "2018-05-06 20:00:00", 3000);
+		addToPartyTable(1010, "UNKNOWN", 110, 108, 108, 0, "2020-12-01", 40000);
+		addToPartyTable(1011, "Subs Xmas Bash", 110, 110, 101, 5000, "2018-12-24 20:00:00", 13);
 		
 	}
 	
@@ -329,10 +326,12 @@ public class CreateDatabase {
 		.execute();
 	}
 	
+	// Both make and run a statement that adds a party to the database
 	private void addToPartyTable(Integer pid, String name, Integer mid, Integer vid, Integer eid, Integer price, String timing, Integer numberofguests) throws SQLException {
 		getAddToPartyTableStatement(db, pid, name, mid, vid, eid, price, timing, numberofguests).execute();
 	}
 	
+	// Get a statement which can be run to add a party to the database
 	public static PreparedStatement getAddToPartyTableStatement(Connection db, Integer pid, String name, Integer mid, Integer vid, Integer eid, Integer price, String timing, Integer numberofguests) throws SQLException {
 		return db.prepareStatement("INSERT INTO Party (pid,name,mid,vid,eid,price,timing,numberofguests) "
 				+ "VALUES (" + pid + ",'" + name + "'," + mid + "," + vid + "," + eid + "," + price + ",'" + timing + "'," + numberofguests + ");");
@@ -344,7 +343,6 @@ public class CreateDatabase {
 		return rand.nextInt(bound) * 100;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public static String getResultSetString(ResultSet rs) throws SQLException {
 		String result = "";
 		// Get metadata to get column labels and the number of columns
@@ -353,7 +351,7 @@ public class CreateDatabase {
 		// Make int array to store max column widths
 		int[] colWidths = new int[colNo];
 	
-		// Store all the lables in the list and their lengths in the width array
+		// Store all the labels in the list and their lengths in the width array
 		List<String> labels = new LinkedList<String>();
 		for(int i = 1; i <= colNo; i++) {
 			String label = rsmd.getColumnLabel(i);
@@ -405,9 +403,7 @@ public class CreateDatabase {
 		}
 	}
 	
-	private void print(String message) {
-		System.out.println(getTime() + ": " + message);
-	}
+	private void print(String message) { System.out.println(getTime() + ": " + message); }
 	
 	private String getTime() {
 		Calendar cal = Calendar.getInstance();
