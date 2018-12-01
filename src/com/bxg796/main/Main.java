@@ -5,11 +5,14 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Random;
+
+import org.postgresql.util.PSQLException;
 
 public class Main {
 	
@@ -20,7 +23,6 @@ public class Main {
 	private Connection db;
 	
 	public Main() {
-
 		Object holder = new Object();
 		clientUI = new UI("Database Manager", holder);
 		db = null;
@@ -28,58 +30,145 @@ public class Main {
 			print("Trying to connect...");
 			db = DriverManager.getConnection(DatabaseInfo.URL, DatabaseInfo.USERNAME, DatabaseInfo.PASSWORD);
 			print("Connected.");
-			
-			
-			String report = partyReport(Integer.parseInt(clientUI.readLine()));
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		while(true) {
-			try {
-				String input = clientUI.readLine();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
+			String choice;
+			boolean quit = false;
+			while(!quit) {
+				clientUI.tell("Would you like to:\n"
+						+ "\t1. Generate a report on a party?\n"
+						+ "\t2. Generate a report on a menu?\n"
+						+ "\t3. Add a new party?\n"
+						+ "\t4. Print a table?\n"
+						+ "\t5. Quit\n"
+						+ "(Please input your option number)");
+				choice = clientUI.readLine();
+				switch (choice) {
+					case "1": partyReport(); break;
+					case "2": menuReport();	break;
+					case "3": addToPartyTable(); break;
+					case "4": printTable(); break;
+					case "5": quit = true; break;
+					default	: clientUI.tell("<Invalid option please try again>"); break;
+				}
 			}
-		}
+
+		} catch (Exception e) { e.printStackTrace(); }
+		//catch (SQLException e) { e.printStackTrace(); }
+		//catch (NumberFormatException e) { e.printStackTrace(); }
+		//catch (InterruptedException e) { e.printStackTrace(); }
+		//catch (IOException e) { e.printStackTrace(); }
 		
-		
+		try {
+         	if(!db.isClosed()) {
+         		print("Closing connection.");
+         		db.close(); 
+         	}
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
 	}
 	
-	private String partyReport(Integer pid) throws SQLException {
-		String report = "";
-		//@formatter:off
-		PreparedStatement ps = db.prepareStatement(
-				"SELECT\n" + 
-				"	Party.pid,\n" + 
-				"	Party.name,\n" + 
-				"	Venue.name,\n" + 
-				"	Menu.description,\n" + 
-				"	Entertainment.description,\n" + 
-				"	Party.numberofguests,\n" + 
-				"	Party.price,\n" + 
-				"	Venue.venuecost+Entertainment.costprice+Menu.costprice*Party.numberofguests\n" + 
-				"FROM Party\n" + 
-				"INNER JOIN Venue ON Party.vid = Venue.vid\n" + 
-				"INNER JOIN Menu ON Party.mid = Menu.mid\n" + 
-				"INNER JOIN Entertainment ON Party.eid = Entertainment.eid\n" + 
-				"WHERE Party.pid = " + pid + ";");
-		//@formatter:on
+	private void partyReport() throws SQLException, InterruptedException, IOException {
+		print("Please input the pid for the party you wish you get a report on:");
+		String stringInput = clientUI.readLine();
+		try {
+			PreparedStatement ps = db.prepareStatement(
+					"SELECT\n" + 
+					"	Party.pid,\n" + 
+					"	Party.name,\n" + 
+					"	Venue.name AS venue,\n" + 
+					"	Menu.description AS menu,\n" + 
+					"	Entertainment.description AS entertainment,\n" + 
+					"	Party.numberofguests,\n" + 
+					"	Party.price,\n" + 
+					"	Venue.venuecost+Entertainment.costprice+Menu.costprice*Party.numberofguests AS profit\n" + 
+					"FROM Party\n" + 
+					"INNER JOIN Venue ON Party.vid = Venue.vid\n" + 
+					"INNER JOIN Menu ON Party.mid = Menu.mid\n" + 
+					"INNER JOIN Entertainment ON Party.eid = Entertainment.eid\n" + 
+					"WHERE Party.pid = " + stringInput + ";", ResultSet.CONCUR_READ_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE);
+			//@formatter:on
+			clientUI.tell("\n" + CreateDatabase.getResultSetString(ps.executeQuery()));
+			pause();
+		} catch (PSQLException e) {
+			clientUI.tell("<ERROR: Invalid PID>\n");
+		}
 		
-		CreateDatabase.printResultSet(ps.executeQuery());
-		return report;
+	}
+	
+	private void menuReport() throws SQLException, InterruptedException, IOException {
+		clientUI.tell("Please input the mid for the menu you wish you get a report on:");
+		String stringInput = clientUI.readLine();
+		try {
+			PreparedStatement ps = db.prepareStatement(
+					"SELECT\n" + 
+					"	Menu.mid,\n" + 
+					"	Menu.description,\n" + 
+					"	Menu.costprice,\n" + 
+					"	COUNT(Menu.mid),\n" + 
+					"	SUM(Party.numberofguests)\n" + 
+					"FROM Menu\n" + 
+					"LEFT JOIN Party ON Party.mid = Menu.mid\n" + 
+					"GROUP BY Menu.mid, Menu.description, Menu.costprice" +
+					"WHERE Menu.mid = " + stringInput + ";", ResultSet.CONCUR_READ_ONLY, ResultSet.TYPE_SCROLL_INSENSITIVE);
+			clientUI.tell("\n" + CreateDatabase.getResultSetString(ps.executeQuery()));
+			pause();
+		} catch (PSQLException e) {
+			clientUI.tell("<ERROR: Invalid MID>\n");
+		}
+	}
+	
+	private void addToPartyTable() throws InterruptedException, IOException, SQLException {
+		String stringInput;
+		try {
+			clientUI.tell("Please input the pid:");
+			Integer pid = Integer.parseInt(clientUI.readLine());
+			clientUI.tell("Please input the party name:");
+			String name = clientUI.readLine();
+			clientUI.tell("Please input the mid of the menu to be used:");
+			Integer mid = Integer.parseInt(clientUI.readLine());
+			clientUI.tell("Please input the vid of the venue to be used:");
+			Integer vid = Integer.parseInt(clientUI.readLine());
+			clientUI.tell("Please input the eid of the entertainment to be used:");
+			Integer eid = Integer.parseInt(clientUI.readLine());
+			clientUI.tell("Please input the quoted price in pounds in the form XXXX.XX:");
+			String priceString = clientUI.readLine();
+			Integer price = Integer.parseInt(priceString.replaceAll("[^0-9]", ""));
+			clientUI.tell("Please input the date of the party [Format=YYYY-MM-DD]:");
+			String date = clientUI.readLine();
+			clientUI.tell("Please input the time of the party [Format=HH:MM:SS]:");
+			String time = clientUI.readLine();
+			String timing = date.concat(" " + time);
+			clientUI.tell("Please input the number of guests that will be attending:");
+			Integer numberofguests = Integer.parseInt(clientUI.readLine());
+			
+			CreateDatabase.getAddToPartyTableStatement(db, pid, name, mid, vid, eid, price, timing, numberofguests).execute();
+			
+			clientUI.tell("The party '" + name + "' has been successfully added to the table!");
+			pause();
+		}
+		catch (NumberFormatException e) { clientUI.tell("<ERROR: The input must be an integer>"); }
+		catch (PSQLException e) {
+			clientUI.tell("<" + e.getMessage() + ">\n");
+			clientUI.tell("<Input formats:\n\tpid:integer | name:length<=30 | mid:integer | vid:integer | eid:integer | price:positive_integer('.'is allowed) | timing:format='YYYY-MM-DD HH:MM:SS' | numberofguests:integer>\n\n");
+		}
+		
+	}
+	
+	private void pause() throws InterruptedException, IOException {
+		clientUI.tell("\n\nPress enter to continue...");
+		clientUI.readLine();
+	}
+	
+	private void printTable() throws SQLException, InterruptedException, IOException {
+		clientUI.tell("What table would you like to print?:");
+		String tableName = clientUI.readLine();
+		try {
+			ResultSet rs = db.prepareStatement("SELECT * FROM " + tableName + ";").executeQuery();
+			clientUI.tell(CreateDatabase.getResultSetString(rs));
+		} catch(PSQLException e) {
+			clientUI.tell("<ERROR: Table does not exist>");
+		}
 	}
 	
 	private void print(String message) {

@@ -44,25 +44,21 @@ public class UI extends JFrame {
 		user = new BufferedReader(new InputStreamReader(System.in));
 		guiMode = false;
 
-		// frameTitle = nickname + "'s Messages";
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		// setPreferredSize(new Dimension(500, 520));
 		setResizable(false);
 		setTitle(frameTitle);
 		setVisible(false);
 
 		textPanel = new JPanel(new FlowLayout());
-		// textPanel.setLayout(new BorderLayout());
-		textPanel.setPreferredSize(new Dimension(500, 500));
+		textPanel.setPreferredSize(new Dimension(1800, 800));
 
-		textArea = new JTextArea(30, 44);
+		textArea = new JTextArea(52, 160);
 
 		textArea.setLineWrap(true);
 		textArea.setEditable(false);
 
 		scrollPane = new JScrollPane(textArea);
 
-		// scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
 		textPanel.add(scrollPane);
@@ -70,10 +66,8 @@ public class UI extends JFrame {
 		add(textPanel, BorderLayout.CENTER);
 
 		inputPanel = new JPanel(new FlowLayout());
-		// inputPanel.setPreferredSize(new Dimension(500, 50));
 
 		textField = new JTextField(44);
-		// textField.setPreferredSize(new Dimension(500, 0));
 
 		textField.addActionListener(new ActionListener() {
 
@@ -112,27 +106,6 @@ public class UI extends JFrame {
 		textArea.append("\n");
 	}
 
-	/**
-	 * Prints an error to the text area using the tell() method and prints out the
-	 * error to the console.
-	 * 
-	 * @param message
-	 *            The message to be printed to the text area and console.
-	 */
-	public void error(String message) {
-		// Report.error(message);
-		tell(message);
-	}
-
-	/**
-	 * Reads the value in the text field after a user presses enter.
-	 * 
-	 * @return The user input in the text field after the user presses enter.
-	 * @throws InterruptedException
-	 *             This is thrown when the method is interrupted while waiting for
-	 *             user input.
-	 * @throws IOException
-	 */
 	public String readLine() throws InterruptedException, IOException {
 		synchronized (holder) {
 			// If the guiMode is true it looks for user input from the textField
@@ -148,6 +121,8 @@ public class UI extends JFrame {
 
 			if (userInput.equals(TOGGLE_COMMAND)) {
 				toggleGUIMode();
+				userInput = null;
+				userInput = readLine();
 			}
 
 			String output = userInput;
@@ -158,7 +133,7 @@ public class UI extends JFrame {
 	}
 
 	/**
-	 * Toggle the guiMode variable and set the visibility of the clientUI to equal
+	 * Toggle the guiMode variable and set the visibility of the UI to equal
 	 * the guiMode.
 	 */
 	private void toggleGUIMode() {

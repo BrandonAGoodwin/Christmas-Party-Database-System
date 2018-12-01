@@ -3,37 +3,37 @@
 
 CREATE TABLE Menu (
 	mid				INTEGER		NOT NULL UNIQUE,
-	description		CHAR(50),
+	description		VARCHAR(50),
 	costprice		INTEGER,
 	PRIMARY KEY (mid),
-	CHECK (costprice >= 0)
+	CHECK (costprice>=0)
 );
 
 --Venue(vid, name, venuecost)
 
 CREATE TABLE Venue (
 	vid				INTEGER		NOT NULL UNIQUE,
-	name			CHAR(15),
+	name			VARCHAR(30),
 	venuecost		INTEGER,
 	PRIMARY KEY (vid),
-	CHECK (venuecost >= 0)
+	CHECK (venuecost>=0)
 );
 
 --Entertainment(eid, description, costprice) 
 
 CREATE TABLE Entertainment (
 	eid				INTEGER		NOT NULL UNIQUE,
-	description		CHAR(50),
+	description		VARCHAR(50),
 	costprice		INTEGER,
 	PRIMARY KEY (eid),
-	CHECK (costprice >= 0)
+	CHECK (costprice>=0)
 );
 
 --Party (pid, name, mid, vid, eid, price, timing, numberofguests) 
 
 CREATE TABLE Party (
 	pid				INTEGER		NOT NULL UNIQUE,
-	name			CHAR(15),
+	name			VARCHAR(30),
 	mid				INTEGER,
 	vid				INTEGER,
 	eid				INTEGER,
@@ -44,24 +44,39 @@ CREATE TABLE Party (
 	FOREIGN KEY (mid) REFERENCES Menu,
 	FOREIGN KEY (vid) REFERENCES Venue,
 	FOREIGN KEY (eid) REFERENCES Entertainment,
-	CHECK (price >= 0),
-	CHECK (numberofguests >= 1)
+	CHECK (price>=0),
+	CHECK (numberofguests>=1)
 );
 
-INSERT INTO 
+-- Party Report
 
 SELECT
 	Party.pid,
 	Party.name,
-	Venue.name,
-	Menu.description,
-	Entertainment.description,
+	Venue.name AS venue,
+	Menu.description AS menu,
+	Entertainment.description AS entertainment,
 	Party.numberofguests,
 	Party.price,
-	Venue.venuecost+Entertainment.costprice+Menu.costprice*Party.numberofguests
+	Venue.venuecost+Entertainment.costprice+Menu.costprice*Party.numberofguests AS profit
 FROM Party
 INNER JOIN Venue ON Party.vid = Venue.vid
 INNER JOIN Menu ON Party.mid = Menu.mid
 INNER JOIN Entertainment ON Party.eid = Entertainment.eid
-WHERE Party.pid = 999
+WHERE Party.pid = userinput;
+
+-- Menu Report
+
+SELECT
+	Menu.mid,
+	Menu.description,
+	Menu.costprice,
+	COUNT(Menu.mid),
+	SUM(Party.numberofguests)
+FROM Menu
+LEFT JOIN Party ON Party.mid = Menu.mid
+WHERE Menu.mid = 102
+GROUP BY Menu.mid, Menu.description, Menu.costprice;
+
+
 https://stackoverflow.com/questions/18672643/how-to-print-a-table-of-information-in-java

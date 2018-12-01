@@ -16,7 +16,7 @@ public class CreateDatabase {
 	private final ArrayList<String> tables;
 	private final String URL = "jdbc:postgresql://mod-intro-databases.cs.bham.ac.uk/bxg796";
 	private final String USERNAME = "bxg796";
-	private final String PASSWORD =                                                                             		 "CartersJr10";
+	private final String PASSWORD =                                                                             		 								"CartersJr10";
 	
 	private final Integer INITIAL_NO_OF_PARTIES = 1000;
 	private final Integer INITIAL_NO_OF_ENTRIES = 100;
@@ -24,6 +24,8 @@ public class CreateDatabase {
 	private final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss");
 	private final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MMM");
 
+	private boolean verbose;
+	
 	Connection db;
 	
 	public static void main(String[] args) {
@@ -36,6 +38,7 @@ public class CreateDatabase {
 	}
 	
 	private void initDatabase() {
+		verbose = false;
 		db = null;
 		try {
 			//String username = System.console().readLine();
@@ -52,40 +55,40 @@ public class CreateDatabase {
 			deleteTable(db, "Menu");
 			deleteTable(db, "Entertainment");
 			
-			///////////////////////////////////////////
+			// Create and populate each table, then
 			
 			createNewVenueTable(INITIAL_NO_OF_ENTRIES);
-			printResultSet(db.prepareStatement(
+			if(verbose) System.out.println(getResultSetString(db.prepareStatement(
 					"SELECT * FROM Venue;",
 					ResultSet.TYPE_SCROLL_INSENSITIVE,
 					ResultSet.CONCUR_READ_ONLY)
-					.executeQuery());
+					.executeQuery()));
 			
 			createNewMenuTable(INITIAL_NO_OF_ENTRIES);
-			printResultSet(db.prepareStatement(
+			if(verbose) System.out.println(getResultSetString(db.prepareStatement(
 					"SELECT * FROM Menu;",
 					ResultSet.TYPE_SCROLL_INSENSITIVE,
 					ResultSet.CONCUR_READ_ONLY)
-					.executeQuery());
+					.executeQuery()));
 			
 			createNewEntertainmentTable(INITIAL_NO_OF_ENTRIES);
-			printResultSet(db.prepareStatement(
+			if(verbose) System.out.println(getResultSetString(db.prepareStatement(
 					"SELECT * FROM Entertainment;",
 					ResultSet.TYPE_SCROLL_INSENSITIVE,
 					ResultSet.CONCUR_READ_ONLY)
-					.executeQuery());
+					.executeQuery()));
 			
 			createNewPartyTable(INITIAL_NO_OF_ENTRIES);
-			printResultSet(db.prepareStatement(
+			if(verbose)System.out.println(getResultSetString(db.prepareStatement(
 					"SELECT * FROM Party;",
 					ResultSet.TYPE_SCROLL_INSENSITIVE,
 					ResultSet.CONCUR_READ_ONLY)
-					.executeQuery());
+					.executeQuery()));
 
 			////////////////////////////////////////////
 			
-			print("Closing connection.");
-			db.close();
+			addUniqueEntries();
+	
 		} catch(SQLException e) {
 			e.printStackTrace();
 		} 
@@ -104,7 +107,7 @@ public class CreateDatabase {
 		String makeVenueTableString = 
 				"CREATE TABLE Venue (\r\n" + 
 				"	vid				INTEGER		NOT NULL UNIQUE,\r\n" + 
-				"	name			CHAR(15),\r\n" + 
+				"	name			VARCHAR(30),\r\n" + 
 				"	venuecost		INTEGER,\r\n" +  
 				"	PRIMARY KEY (vid),\r\n" + 
 				"	CHECK (venuecost>=0)\r\n" + 
@@ -134,7 +137,7 @@ public class CreateDatabase {
 		String makeMenuTableString = 
 				"CREATE TABLE Menu (\r\n" + 
 				"	mid				INTEGER		NOT NULL UNIQUE,\r\n" + 
-				"	description		CHAR(50),\r\n" + 
+				"	description		VARCHAR(50),\r\n" + 
 				"	costprice		INTEGER,\r\n" + 
 				"	PRIMARY KEY (mid),\r\n" + 
 				"	CHECK (costprice>=0)\r\n" + 
@@ -162,7 +165,7 @@ public class CreateDatabase {
 		String makeEntertainmentTableString =
 				"CREATE TABLE Entertainment (\r\n" + 
 				"	eid				INTEGER		NOT NULL UNIQUE,\r\n" + 
-				"	description		CHAR(50),\r\n" + 
+				"	description		VARCHAR(50),\r\n" + 
 				"	costprice		INTEGER,\r\n" + 
 				"	PRIMARY KEY (eid),\r\n" + 
 				"	CHECK (costprice>=0)\r\n" + 
@@ -190,7 +193,7 @@ public class CreateDatabase {
 		String makePartyTableString =
 				"CREATE TABLE Party (\r\n" + 
 				"	pid				INTEGER		NOT NULL UNIQUE,\r\n" + 
-				"	name			CHAR(15),\r\n" + 
+				"	name			VARCHAR(30),\r\n" + 
 				"	mid				INTEGER,\r\n" + 
 				"	vid				INTEGER,\r\n" + 
 				"	eid				INTEGER,\r\n" + 
@@ -264,6 +267,77 @@ public class CreateDatabase {
 		return popString;
 	}
 	
+	private void addUniqueEntries() throws SQLException {
+		addToVenueTable(100, "Subs House", 3500);
+		addToVenueTable(101, "CS Atrium", 0);
+		addToVenueTable(102, "Party Hall", 10000);
+		addToVenueTable(103, "Slomans Lounge", 24000);
+		addToVenueTable(104, "Devins House", 200);
+		addToVenueTable(105, "ISS", 3145900);
+		addToVenueTable(106, "Sports Hall", 63300);
+		addToVenueTable(107, "Theater", 30000);
+		addToVenueTable(108, "Warehouse", 57000);
+		addToVenueTable(109, "Howls Moving Castle", 9999900);
+		
+		addToMenuTable(100, "Dixys Chicken", 450);
+		addToMenuTable(101, "Roosters", 420);
+		addToMenuTable(102, "Big Johns", 390);
+		addToMenuTable(103, "Liberty Hot Pot", 100);
+		addToMenuTable(104, "Fish and Chips", 190);
+		addToMenuTable(105, "Ramen and Beans", 0);
+		addToMenuTable(106, "Cold Finger Foods", 50);
+		addToMenuTable(107, "One Pound Fish", 100);
+		addToMenuTable(108, "Sag aloo and Cake", 1350);
+		addToMenuTable(109, "Lots of Salad", 80);
+		
+		addToEntertainmentTable(100, "Crawl and Drinks", 2000);
+		addToEntertainmentTable(101, "Secret Hitler", 3000);
+		addToEntertainmentTable(102, "Laser Tag", 15000);
+		addToEntertainmentTable(103, "Cinema", 12000);
+		addToEntertainmentTable(104, "Skiing", 1000000);
+		addToEntertainmentTable(105, "Snowboarding", 850000);
+		addToEntertainmentTable(106, "Jazz Band", 30000);
+		addToEntertainmentTable(107, "Circus", 50000);
+		addToEntertainmentTable(108, "Synchronised Swimmers", 38900);
+		addToEntertainmentTable(109, "DJ", 13000);
+		
+		addToPartyTable(1000, "Subs Xmas Bash", 100, 100, 101, 5000, "2018-12-24 20:00:00", 13);
+		addToPartyTable(1001, "Student Night", 105, 104, 100, 2500, "2018-10-13 18:30:00", 24);
+		addToPartyTable(1002, "Switch at the Cinema", 101, 107, 100, 30000, "2019-01-10 12:45:00", 10);
+		addToPartyTable(1003, "CS Ball", 106, 106, 109, 400000, "2018-12-09 19:30:00", 250);
+		addToPartyTable(1004, "Work Party", 109, 108, 102, 125000, "2019-04-11 07:30:00", 63);
+		addToPartyTable(1005, "Upper Echelon Function", 107, 105, 104, 10000000, "2019-01-01 22:00:00", 4);
+		addToPartyTable(1006, "Birthday Party", 100, 109, 108, 30000, "2018-07-14 21:15:00", 31);
+		
+	}
+	
+	private void addToVenueTable(Integer vid, String name, Integer venuecost) throws SQLException {
+		db.prepareStatement("INSERT INTO Venue (vid,name,venuecost) "
+				+ "VALUES (" + vid + ",'" + name + "'," + venuecost + ");")
+		.execute();
+	}
+	
+	private void addToMenuTable(Integer mid, String description, Integer costprice) throws SQLException {
+		db.prepareStatement("INSERT INTO Menu (mid,description,costprice) "
+				+ "VALUES (" + mid + ",'" + description + "'," + costprice + ");")
+		.execute();
+	}
+	
+	private void addToEntertainmentTable(Integer eid, String description, Integer costprice) throws SQLException {
+		db.prepareStatement("INSERT INTO Entertainment (eid,description,costprice) "
+				+ "VALUES (" + eid + ",'" + description + "'," + costprice + ");")
+		.execute();
+	}
+	
+	private void addToPartyTable(Integer pid, String name, Integer mid, Integer vid, Integer eid, Integer price, String timing, Integer numberofguests) throws SQLException {
+		getAddToPartyTableStatement(db, pid, name, mid, vid, eid, price, timing, numberofguests).execute();
+	}
+	
+	public static PreparedStatement getAddToPartyTableStatement(Connection db, Integer pid, String name, Integer mid, Integer vid, Integer eid, Integer price, String timing, Integer numberofguests) throws SQLException {
+		return db.prepareStatement("INSERT INTO Party (pid,name,mid,vid,eid,price,timing,numberofguests) "
+				+ "VALUES (" + pid + ",'" + name + "'," + mid + "," + vid + "," + eid + "," + price + ",'" + timing + "'," + numberofguests + ");");
+	}
+		
 	private Integer generateRandomCost(int _bound) {
 		int bound = _bound / 100;
 		Random rand = new Random();
@@ -271,13 +345,15 @@ public class CreateDatabase {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static void printResultSet(ResultSet rs) throws SQLException {
-		
+	public static String getResultSetString(ResultSet rs) throws SQLException {
+		String result = "";
+		// Get metadata to get column labels and the number of columns
 		ResultSetMetaData rsmd = rs.getMetaData();
 		int colNo = rsmd.getColumnCount();
-		
+		// Make int array to store max column widths
 		int[] colWidths = new int[colNo];
 	
+		// Store all the lables in the list and their lengths in the width array
 		List<String> labels = new LinkedList<String>();
 		for(int i = 1; i <= colNo; i++) {
 			String label = rsmd.getColumnLabel(i);
@@ -299,29 +375,36 @@ public class CreateDatabase {
 		}
 		
 		StringBuilder format = new StringBuilder();
-		for(int maxWidth : colWidths) { format.append("%-").append(maxWidth + 2).append("s| "); }
-		String formatString = format.toString();
-
-		System.out.println(String.format(formatString, labels.toArray(new String[0])));
-		
-		for(List<String> row : rows) { System.out.println(String.format(formatString, row.toArray(new String[0]))); }
-	
-	}
-	
-	private void deleteTable(Connection db, String table, boolean verbose) throws SQLException {
-		if(verbose) print("Deleting " + table + " table... ");
-		try {
-			db.prepareStatement("DROP TABLE " + table + ";").execute();
-			if(verbose) print("Done.");
-		} catch (PSQLException e) {
-			System.out.println("Table " + table + " does not exist."); 
+		int totalWidth = 0;
+		for(int maxWidth : colWidths) { 
+			format.append("%-").append(maxWidth + 2).append("s| ");
+			totalWidth += maxWidth + 4;
 		}
+		
+		String underline = "";
+		for(int i = 0; i < totalWidth - 1; i++) underline += "-"; 
+		
+		String formatString = format.toString();
+		// Add out formatted labels
+		result += String.format(formatString, labels.toArray(new String[0])) + "\n";
+		// Add out label underline
+		result += underline + "\n";
+		// Add out rows
+		for(List<String> row : rows) { result += String.format(formatString, row.toArray(new String[0])) + "\n"; }
+		
+		return result;	
 	}
 	
 	private void deleteTable(Connection db, String table) throws SQLException {
-		deleteTable(db, table, false);
+		print("Deleting " + table + " table... ");
+		try {
+			db.prepareStatement("DROP TABLE " + table + ";").execute();
+			print("Done.");
+		} catch (PSQLException e) {
+			print("Table " + table + " does not exist."); 
+		}
 	}
-		
+	
 	private void print(String message) {
 		System.out.println(getTime() + ": " + message);
 	}
