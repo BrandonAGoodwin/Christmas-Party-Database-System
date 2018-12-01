@@ -89,6 +89,15 @@ public class CreateDatabase {
 		} catch(SQLException e) {
 			e.printStackTrace();
 		} 
+		
+		 try {
+         	if(!db.isClosed()) {
+         		print("Closing connection.");
+         		db.close(); 
+         	}
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 	}
 	
 	private void createNewVenueTable(int noOfEntries) throws SQLException {
